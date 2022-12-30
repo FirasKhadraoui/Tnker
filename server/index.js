@@ -81,10 +81,17 @@ app.get("/user/:id", verifyToken, (req, res) => {
         } else {
             let id = req.params.id;
             let user = users.find(user => user.id == id);
-            res.json({
-                success: true,
-                message:  user
-            })
+            if (user) {
+                res.json({
+                    success: true,
+                    message: user
+                })
+            }
+            else {
+                res.json({
+                    message: "user doesn't exist"
+                })
+            }
         }
     })
 })
@@ -93,11 +100,21 @@ app.get("/user/:id", verifyToken, (req, res) => {
 app.delete("/user/:id", (req, res) => {
     let { id } = req.params;
     users = users.filter(user => user.id != id);
-    res.send(users);
+    try {
+        res.json({
+            success: true,
+            message: "user deleted successfully"
+        })
+    } catch (err) {
+        res.json({
+            success: false,
+            message: err.message
+        })
+    }
 })
 
 //UPDATE USER
-app.patch("/user/:id",verifyToken, (req, res) => {
+app.patch("/user/:id", verifyToken, (req, res) => {
     jwt.verify(req.token, secretKey, (err, authData) => {
         if (err) {
             res.json({
