@@ -1,12 +1,13 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const bodyParser = require("body-parser");
-// const low = require("lowdb");
 const { v4: uuidv4 } = require('uuid');
+const cors = require('cors');
 
 const app = express();
 const secretKey = "secretkey";
 app.use(bodyParser.json());
+app.use(cors());
 
 let users = [
     {
