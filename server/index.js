@@ -1,13 +1,33 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const bodyParser = require("body-parser");
-const { v4: uuidv4, stringify } = require('uuid');
+// const low = require("lowdb");
+const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 const secretKey = "secretkey";
 app.use(bodyParser.json());
 
-let users = [];
+let users = [
+    {
+        "id": "iEuOBYkU",
+        "username": "user1",
+        "password": "1111",
+        "age": "11"
+    },
+    {
+        "id": "ukjXyUuM",
+        "username": "user2",
+        "password": "0000",
+        "age": "17"
+    },
+    {
+        "id": "BDUDxb6F",
+        "username": "user3",
+        "password": "1212",
+        "age": "23"
+    }
+];
 
 //SIMPLE TEST
 app.get("/", (req, res) => {
@@ -15,9 +35,9 @@ app.get("/", (req, res) => {
         message: "a simple api for test"
     })
 })
-
 //GET ALL USERS
 app.get("/user", (req, res) => {
+    // const users = req.app.db.get("users");
     res.send(users);
 })
 
@@ -26,24 +46,24 @@ app.post("/user", (req, res) => {
     if (req.body.age > 0 && req.body.username != "") {
         users.push({ ...req.body, id: uuidv4() });
         // res.send(req.body);
-        jwt.sign((req.body), secretKey, {expiresIn:'3000s'}, (err, token)=>{
+        jwt.sign((req.body), secretKey, { expiresIn: '3000s' }, (err, token) => {
             res.json({
-                success : true,
-                message : "user created successfully",
-                access_token : token
+                success: true,
+                message: "user created successfully",
+                access_token: token
             })
         })
     }
     else {
         if (req.body.age <= 0) {
             res.json({
-                success : false,
+                success: false,
                 message: "age must be > 0"
             })
         }
         else {
             res.json({
-                success : false,
+                success: false,
                 message: "username is required"
             })
         }
@@ -51,38 +71,68 @@ app.post("/user", (req, res) => {
 })
 
 //GET USER BY ID
-app.get("/user/:id", (req, res) => {
-    let id = req.params.id;
-    let user = users.find(user=>user.id == id);
-    res.send(user);
+app.get("/user/:id", verifyToken, (req, res) => {
+    jwt.verify(req.token, secretKey, (err, authData) => {
+        if (err) {
+            res.json({
+                success: false,
+                message: "failed to fetch user with this token " + req.token
+            })
+        } else {
+            let id = req.params.id;
+            let user = users.find(user => user.id == id);
+            res.json({
+                success: true,
+                message:  user
+            })
+        }
+    })
 })
 
 //DELETE USER
 app.delete("/user/:id", (req, res) => {
-    let {id} = req.params;
-    users = users.filter(user=>user.id != id);
+    let { id } = req.params;
+    users = users.filter(user => user.id != id);
     res.send(users);
 })
 
 //UPDATE USER
-app.patch("/user/:id", (req, res) => {
-    let {username,password,age} = req.body;
-    let id = req.params.id;
-    let user = users.find(user=>user.id == id);
-    user.username = username;
-    user.password = password;
-    user.age = age;
-
-    res.send(user);
+app.patch("/user/:id",verifyToken, (req, res) => {
+    jwt.verify(req.token, secretKey, (err, authData) => {
+        if (err) {
+            res.json({
+                success: false,
+                message: "error message for example token is invalid"
+            })
+        } else {
+            let { username, password, age } = req.body;
+            let id = req.params.id;
+            let user = users.find(user => user.id == id);
+            user.username = username;
+            user.password = password;
+            user.age = age;
+            res.json({
+                success: true,
+                message: "user updated successfully",
+            })
+        }
+    })
 })
 
-app.post("/login", (req, res) => {
-    const user = {
-        id: 1,
-        username: "test",
-        email: ""
+function verifyToken(req, res, next) {
+    const bearerHeader = req.headers['authorization'];
+    if (typeof bearerHeader !== 'undefined') {
+        const bearer = bearerHeader.split(" ");
+        const token = bearer[1];
+        req.token = token;
+        next();
     }
-})
+    else {
+        res.send({
+            result: 'Token is not valid'
+        })
+    }
+}
 
 app.listen(5000, () => {
     console.log("app is running on 5000 port");
