@@ -19,9 +19,11 @@ function CreateUser() {
                 }),
         })
         const data = await response.json()
+        console.log(data.user.age);
 		if (data.success==true) {
 			localStorage.setItem('token', data.access_token)
-			// alert('Login successful')
+            localStorage.setItem('age', data.user.age)
+            localStorage.setItem('username', data.user.username)
 			window.location.href = '/user-details'
 		} else {
 		    alert(data.message)

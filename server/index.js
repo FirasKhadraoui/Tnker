@@ -38,7 +38,6 @@ app.get("/", (req, res) => {
 })
 //GET ALL USERS
 app.get("/user", (req, res) => {
-    // const users = req.app.db.get("users");
     res.send(users);
 })
 
@@ -51,7 +50,8 @@ app.post("/user", (req, res) => {
             res.json({
                 success: true,
                 message: "user created successfully",
-                access_token: token
+                access_token: token,
+                user: req.body
             })
         })
     }
