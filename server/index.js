@@ -21,12 +21,6 @@ let users = [
         "username": "user2",
         "password": "0000",
         "age": "17"
-    },
-    {
-        "id": "BDUDxb6F",
-        "username": "user3",
-        "password": "1212",
-        "age": "23"
     }
 ];
 

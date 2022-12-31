@@ -19,7 +19,6 @@ function CreateUser() {
                 }),
         })
         const data = await response.json()
-        console.log(data.user.age);
 		if (data.success==true) {
 			localStorage.setItem('token', data.access_token)
             localStorage.setItem('age', data.user.age)
