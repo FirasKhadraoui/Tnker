@@ -3,6 +3,8 @@ const jwt = require("jsonwebtoken");
 const bodyParser = require("body-parser");
 const { v4: uuidv4 } = require('uuid');
 const cors = require('cors');
+const swaggerUI = require("swagger-ui-express");
+const swaggerJsDoc = require("swagger-jsdoc");
 
 const app = express();
 const secretKey = "secretkey";
@@ -24,16 +26,110 @@ let users = [
     }
 ];
 
+const options = {
+	definition: {
+		openapi: "3.0.0",
+		info: {
+			title: "Library API",
+			version: "1.0.0",
+			description: "A simple Express Library API",
+		},
+		servers: [
+			{
+				url: "http://localhost:5000",
+			},
+		],
+	},
+	apis: ["index.js"],
+};
+
+const specs = swaggerJsDoc(options);
+app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(specs));
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       required:
+ *         - username
+ *       properties:
+ *         id:
+ *           type: string
+ *           description: The auto-generated id of the user
+ *         username:
+ *           type: string
+ *           description: The username of user
+ *         password:
+ *           type: string
+ *           description: The password
+ *         age:
+ *           type: number
+ *           description: Age of user
+ * 
+ *       example:
+ *         username: Firas
+ *         password: 1111
+ *         age: 25
+ */
 //SIMPLE TEST
 app.get("/", (req, res) => {
     res.json({
         message: "a simple api for test"
     })
 })
+
+ /**
+  * @swagger
+  * tags:
+  *   name: Users
+  *   description: The users managing API
+  */
+
+/**
+ * @swagger
+ * /user:
+ *   get:
+ *     summary: Returns the list of all the users
+ *     tags: [Users]
+ *     responses:
+ *       200:
+ *         description: The list of the users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/User'
+ */
 //GET ALL USERS
 app.get("/user", (req, res) => {
     res.send(users);
 })
+
+/**
+ * @swagger
+ * /user:
+ *   post:
+ *     summary: Create a new user
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/User'
+ *     responses:
+ *       200:
+ *         description: The user was successfully created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       500:
+ *         description: Some server error
+ */
 
 //ADD USER
 app.post("/user", (req, res) => {
@@ -65,6 +161,30 @@ app.post("/user", (req, res) => {
     }
 })
 
+/**
+ * @swagger
+ * /user/{id}:
+ *   get:
+ *     summary: Get the user by id
+ *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The user id
+ *     responses:
+ *       200:
+ *         description: The user description by id
+ *         contens:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       404:
+ *         description: The user was not found
+ */
+
 //GET USER BY ID
 app.get("/user/:id", verifyToken, (req, res) => {
     jwt.verify(req.token, secretKey, (err, authData) => {
@@ -91,6 +211,27 @@ app.get("/user/:id", verifyToken, (req, res) => {
     })
 })
 
+/**
+ * @swagger
+ * /user/{id}:
+ *   delete:
+ *     summary: Remove the user by id
+ *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The user id
+ * 
+ *     responses:
+ *       200:
+ *         description: The user was deleted
+ *       404:
+ *         description: The user was not found
+ */
+
 //DELETE USER
 app.delete("/user/:id", (req, res) => {
     let { id } = req.params;
@@ -107,6 +248,38 @@ app.delete("/user/:id", (req, res) => {
         })
     }
 })
+
+/**
+ * @swagger
+ * /user/{id}:
+ *  patch:
+ *    summary: Update the user by the id
+ *    tags: [Users]
+ *    parameters:
+ *      - in: path
+ *        name: id
+ *        schema:
+ *          type: string
+ *        required: true
+ *        description: The user id
+ *    requestBody:
+ *      required: true
+ *      content:
+ *        application/json:
+ *          schema:
+ *            $ref: '#/components/schemas/User'
+ *    responses:
+ *      200:
+ *        description: The user was updated
+ *        content:
+ *          application/json:
+ *            schema:
+ *              $ref: '#/components/schemas/User'
+ *      404:
+ *        description: The user was not found
+ *      500:
+ *        description: Some error happened
+ */
 
 //UPDATE USER
 app.patch("/user/:id", verifyToken, (req, res) => {
